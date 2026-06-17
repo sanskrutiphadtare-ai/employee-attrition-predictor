@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Employee Attrition Predictor</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  :root {
+    --bg: #080e1a;
+    --surface: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.08);
+    --accent: #38bdf8;
+    --accent2: #818cf8;
+    --danger: #f87171;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --label: #94a3b8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    min-height: 100vh;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  /* Animated background mesh */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 20% 20%, rgba(56,189,248,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 60% at 80% 80%, rgba(129,140,248,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 40% at 50% 50%, rgba(248,113,113,0.03) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page-wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 40px 20px 60px;
+  }
+
+  /* Header */
+  .hero {
+    text-align: center;
+    margin-bottom: 48px;
+    animation: fadeDown 0.7s ease both;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(56,189,248,0.1);
+    border: 1px solid rgba(56,189,248,0.2);
+    color: var(--accent);
+    border-radius: 100px;
+    padding: 6px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    background: linear-gradient(135deg, #f1f5f9 30%, #38bdf8 70%, #818cf8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.15;
+    margin-bottom: 12px;
+  }
+
+  .hero p {
+    color: var(--muted);
+    font-size: 15px;
+    font-weight: 300;
+  }
+
+  /* Stats bar */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 36px;
+    animation: fadeUp 0.7s 0.1s ease both;
+  }
+
+  .stat-pill {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 20px;
+    text-align: center;
+  }
+
+  .stat-pill .num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.6rem;
+    color: var(--accent);
+    display: block;
+  }
+
+  .stat-pill .lbl {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+
+  /* Form card */
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 40px;
+    animation: fadeUp 0.7s 0.2s ease both;
+  }
+
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-label .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--label);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .form-label i {
+    margin-right: 6px;
+    color: var(--accent);
+    font-size: 11px;
+  }
+
+  .form-control, .form-select {
+    background: rgba(255,255,255,0.05) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 12px !important;
+    color: var(--text) !important;
+    padding: 12px 16px !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 14px !important;
+    transition: border-color 0.2s, box-shadow 0.2s !important;
+    width: 100%;
+  }
+
+  .form-control::placeholder { color: #475569 !important; }
+
+  .form-control:focus, .form-select:focus {
+    outline: none !important;
+    border-color: rgba(56,189,248,0.4) !important;
+    box-shadow: 0 0 0 3px rgba(56,189,248,0.08) !important;
+    background: rgba(255,255,255,0.07) !important;
+  }
+
+  .form-select option { background: #1e293b; color: var(--text); }
+
+  /* Rating widget */
+  .rating-group {
+    display: flex;
+    gap: 8px;
+  }
+
+  .rating-group input[type="radio"] { display: none; }
+
+  .rating-group label {
+    flex: 1;
+    text-align: center;
+    padding: 10px 6px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.04);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    transition: all 0.2s;
+    user-select: none;
+  }
+
+  .rating-group input[type="radio"]:checked + label {
+    background: rgba(56,189,248,0.15);
+    border-color: var(--accent);
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .rating-group label:hover {
+    border-color: rgba(56,189,248,0.3);
+    color: var(--text);
+  }
+
+  .rating-hint {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 5px;
+    padding: 0 2px;
+  }
+
+  /* Divider */
+  .section-gap { margin-top: 36px; }
+
+  /* Submit */
+  .submit-area { margin-top: 36px; }
+
+  .predict-btn {
+    width: 100%;
+    padding: 18px 32px;
+    border: none;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #0ea5e9, #6366f1);
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .predict-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent, rgba(255,255,255,0.1));
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .predict-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(14,165,233,0.3);
+  }
+
+  .predict-btn:hover::after { opacity: 1; }
+  .predict-btn:active { transform: translateY(0); }
+
+  .predict-btn i { margin-right: 10px; }
+
+  /* Keyframes */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 576px) {
+    .stats-bar { grid-template-columns: 1fr; }
+    .form-card { padding: 24px 18px; }
+    .rating-group label { font-size: 11px; padding: 8px 4px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-badge"><i class="fas fa-brain"></i> AI-Powered · Random Forest</div>
+    <h1>Employee Attrition<br>Risk Predictor</h1>
+    <p>Fill in 18 key HR factors to get an instant attrition risk assessment</p>
+  </div>
+
+  <!-- Stats bar -->
+  <div class="stats-bar">
+    <div class="stat-pill">
+      <span class="num">87.8%</span>
+      <span class="lbl">Model Accuracy</span>
+    </div>
+    <div class="stat-pill">
+      <span class="num">18</span>
+      <span class="lbl">Key Features</span>
+    </div>
+    <div class="stat-pill">
+      <span class="num">1,470</span>
+      <span class="lbl">Training Records</span>
+    </div>
+  </div>
+
+  <!-- Form -->
+  <div class="form-card">
+    <form action="/predict" method="POST">
+
+      <!-- Section 1: Personal Info -->
+      <div class="section-label">
+        <span class="dot"></span> Personal Information
+      </div>
+      <div class="row">
+        <div class="col-md-4 form-group">
+          <label class="form-label"><i class="fas fa-user"></i>Age</label>
+          <input type="number" class="form-control" name="Age" placeholder="e.g. 32" min="18" max="65" required>
+        </div>
+        <div class="col-md-4 form-group">
+          <label class="form-label"><i class="fas fa-venus-mars"></i>Gender</label>
+          <select class="form-select" name="Gender">
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
+        </div>
+        <div class="col-md-4 form-group">
+          <label class="form-label"><i class="fas fa-ring"></i>Marital Status</label>
+          <select class="form-select" name="MaritalStatus">
+            <option value="Single">Single</option>
+            <option value="Married">Married</option>
+            <option value="Divorced">Divorced</option>
+          </select>
+        </div>
+        <div class="col-md-6 form-group">
+          <label class="form-label"><i class="fas fa-road"></i>Distance From Home (km)</label>
+          <input type="number" class="form-control" name="DistanceFromHome" placeholder="e.g. 12" min="1" max="100" required>
+        </div>
+        <div class="col-md-6 form-group">
+          <label class="form-label"><i class="fas fa-plane"></i>Business Travel</label>
+          <select class="form-select" name="BusinessTravel">
+            <option value="Non-Travel">Non-Travel</option>
+            <option value="Travel_Rarely">Travel Rarely</option>
+            <option value="Travel_Frequently">Travel Frequently</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Section 2: Job Details -->
+      <div class="section-gap">
+        <div class="section-label">
+          <span class="dot" style="background:var(--accent2)"></span> Job Details
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6 form-group">
+          <label class="form-label"><i class="fas fa-building"></i>Department</label>
+          <select class="form-select" name="Department">
+            <option value="Sales">Sales</option>
+            <option value="Research &amp; Development">Research &amp; Development</option>
+            <option value="Human Resources">Human Resources</option>
+          </select>
+        </div>
+        <div class="col-md-6 form-group">
+          <label class="form-label"><i class="fas fa-briefcase"></i>Job Role</label>
+          <select class="form-select" name="JobRole">
+            <option value="Sales Executive">Sales Executive</option>
+            <option value="Research Scientist">Research Scientist</option>
+            <option value="Laboratory Technician">Laboratory Technician</option>
+            <option value="Manufacturing Director">Manufacturing Director</option>
+            <option value="Healthcare Representative">Healthcare Representative</option>
+            <option value="Manager">Manager</option>
+            <option value="Sales Representative">Sales Representative</option>
+            <option value="Research Director">Research Director</option>
+            <option value="Human Resources">Human Resources</option>
+          </select>
+        </div>
+        <div class="col-md-4 form-group">
+          <label class="form-label"><i class="fas fa-layer-group"></i>Job Level (1–5)</label>
+          <input type="number" class="form-control" name="JobLevel" placeholder="1–5" min="1" max="5" required>
+        </div>
+        <div class="col-md-4 form-group">
+          <label class="form-label"><i class="fas fa-money-bill-wave"></i>Monthly Income (₹)</label>
+          <input type="number" class="form-control" name="MonthlyIncome" placeholder="e.g. 55000" min="1000" required>
+        </div>
+        <div class="col-md-4 form-group">
+          <label class="form-label"><i class="fas fa-chart-line"></i>% Salary Hike</label>
+          <input type="number" class="form-control" name="PercentSalaryHike" placeholder="e.g. 14" min="11" max="25" required>
+        </div>
+        <div class="col-md-4 form-group">
+          <label class="form-label"><i class="fas fa-clock"></i>Overtime</label>
+          <select class="form-select" name="OverTime">
+            <option value="0">No</option>
+            <option value="1">Yes</option>
+          </select>
+        </div>
+        <div class="col-md-4 form-group">
+          <label class="form-label"><i class="fas fa-chart-bar"></i>Stock Option Level (0–3)</label>
+          <input type="number" class="form-control" name="StockOptionLevel" placeholder="0–3" min="0" max="3" required>
+        </div>
+        <div class="col-md-4 form-group">
+          <label class="form-label"><i class="fas fa-graduation-cap"></i>Education (1–5)</label>
+          <input type="number" class="form-control" name="Education" placeholder="1=Below College, 5=Doctor" min="1" max="5" required>
+        </div>
+      </div>
+
+      <!-- Section 3: Experience -->
+      <div class="section-gap">
+        <div class="section-label">
+          <span class="dot" style="background:#34d399"></span> Work Experience
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-3 form-group">
+          <label class="form-label"><i class="fas fa-calendar-alt"></i>Total Working Years</label>
+          <input type="number" class="form-control" name="TotalWorkingYears" placeholder="e.g. 8" min="0" max="40" required>
+        </div>
+        <div class="col-md-3 form-group">
+          <label class="form-label"><i class="fas fa-building"></i>Years at Company</label>
+          <input type="number" class="form-control" name="YearsAtCompany" placeholder="e.g. 4" min="0" max="40" required>
+        </div>
+        <div class="col-md-3 form-group">
+          <label class="form-label"><i class="fas fa-user-tie"></i>Years w/ Manager</label>
+          <input type="number" class="form-control" name="YearsWithCurrManager" placeholder="e.g. 2" min="0" max="20" required>
+        </div>
+        <div class="col-md-3 form-group">
+          <label class="form-label"><i class="fas fa-trophy"></i>Yrs Since Promotion</label>
+          <input type="number" class="form-control" name="YearsSinceLastPromotion" placeholder="e.g. 1" min="0" max="15" required>
+        </div>
+        <div class="col-md-6 form-group">
+          <label class="form-label"><i class="fas fa-suitcase"></i>No. of Companies Worked</label>
+          <input type="number" class="form-control" name="NumCompaniesWorked" placeholder="e.g. 3" min="0" max="10" required>
+        </div>
+        <div class="col-md-6 form-group">
+          <label class="form-label"><i class="fas fa-chalkboard-teacher"></i>Trainings Last Year</label>
+          <input type="number" class="form-control" name="TrainingTimesLastYear" placeholder="e.g. 2" min="0" max="6" required>
+        </div>
+      </div>
+
+      <!-- Section 4: Satisfaction Ratings -->
+      <div class="section-gap">
+        <div class="section-label">
+          <span class="dot" style="background:#fb923c"></span> Satisfaction &amp; Engagement Ratings
+        </div>
+      </div>
+
+      <!-- Job Satisfaction -->
+      <div class="form-group">
+        <label class="form-label"><i class="fas fa-smile"></i>Job Satisfaction</label>
+        <div class="rating-group">
+          <input type="radio" name="JobSatisfaction" id="js1" value="1" required>
+          <label for="js1">1<br>Low</label>
+          <input type="radio" name="JobSatisfaction" id="js2" value="2">
+          <label for="js2">2<br>Medium</label>
+          <input type="radio" name="JobSatisfaction" id="js3" value="3" checked>
+          <label for="js3">3<br>High</label>
+          <input type="radio" name="JobSatisfaction" id="js4" value="4">
+          <label for="js4">4<br>Very High</label>
+        </div>
+      </div>
+
+      <!-- Work-Life Balance -->
+      <div class="form-group">
+        <label class="form-label"><i class="fas fa-balance-scale"></i>Work-Life Balance</label>
+        <div class="rating-group">
+          <input type="radio" name="WorkLifeBalance" id="wl1" value="1" required>
+          <label for="wl1">1<br>Bad</label>
+          <input type="radio" name="WorkLifeBalance" id="wl2" value="2">
+          <label for="wl2">2<br>Good</label>
+          <input type="radio" name="WorkLifeBalance" id="wl3" value="3" checked>
+          <label for="wl3">3<br>Better</label>
+          <input type="radio" name="WorkLifeBalance" id="wl4" value="4">
+          <label for="wl4">4<br>Best</label>
+        </div>
+      </div>
+
+      <!-- Environment Satisfaction -->
+      <div class="form-group">
+        <label class="form-label"><i class="fas fa-leaf"></i>Environment Satisfaction</label>
+        <div class="rating-group">
+          <input type="radio" name="EnvironmentSatisfaction" id="es1" value="1" required>
+          <label for="es1">1<br>Low</label>
+          <input type="radio" name="EnvironmentSatisfaction" id="es2" value="2">
+          <label for="es2">2<br>Medium</label>
+          <input type="radio" name="EnvironmentSatisfaction" id="es3" value="3" checked>
+          <label for="es3">3<br>High</label>
+          <input type="radio" name="EnvironmentSatisfaction" id="es4" value="4">
+          <label for="es4">4<br>Very High</label>
+        </div>
+      </div>
+
+      <!-- Job Involvement -->
+      <div class="form-group">
+        <label class="form-label"><i class="fas fa-fire"></i>Job Involvement</label>
+        <div class="rating-group">
+          <input type="radio" name="JobInvolvement" id="ji1" value="1" required>
+          <label for="ji1">1<br>Low</label>
+          <input type="radio" name="JobInvolvement" id="ji2" value="2">
+          <label for="ji2">2<br>Medium</label>
+          <input type="radio" name="JobInvolvement" id="ji3" value="3" checked>
+          <label for="ji3">3<br>High</label>
+          <input type="radio" name="JobInvolvement" id="ji4" value="4">
+          <label for="ji4">4<br>Very High</label>
+        </div>
+      </div>
+
+      <!-- Relationship Satisfaction -->
+      <div class="form-group">
+        <label class="form-label"><i class="fas fa-handshake"></i>Relationship Satisfaction</label>
+        <div class="rating-group">
+          <input type="radio" name="RelationshipSatisfaction" id="rs1" value="1" required>
+          <label for="rs1">1<br>Low</label>
+          <input type="radio" name="RelationshipSatisfaction" id="rs2" value="2">
+          <label for="rs2">2<br>Medium</label>
+          <input type="radio" name="RelationshipSatisfaction" id="rs3" value="3" checked>
+          <label for="rs3">3<br>High</label>
+          <input type="radio" name="RelationshipSatisfaction" id="rs4" value="4">
+          <label for="rs4">4<br>Very High</label>
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <div class="submit-area">
+        <button type="submit" class="predict-btn">
+          <i class="fas fa-brain"></i>Analyze Attrition Risk
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+</div>
+
+</body>
+</html>
