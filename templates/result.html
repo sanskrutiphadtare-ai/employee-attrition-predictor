@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Attrition Risk Result</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  :root {
+    --bg: #080e1a;
+    --surface: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.08);
+    --accent: #38bdf8;
+    --accent2: #818cf8;
+    --danger: #f87171;
+    --success: #34d399;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --label: #94a3b8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    min-height: 100vh;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 15% 25%, rgba(248,113,113,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 60% at 85% 75%, rgba(129,140,248,0.06) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page-wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 40px 20px 60px;
+  }
+
+  /* Result Hero */
+  .result-hero {
+    text-align: center;
+    margin-bottom: 40px;
+    animation: fadeDown 0.6s ease both;
+  }
+
+  .verdict-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    border-radius: 100px;
+    padding: 10px 24px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .verdict-badge.high {
+    background: rgba(248,113,113,0.12);
+    border: 1px solid rgba(248,113,113,0.3);
+    color: var(--danger);
+  }
+
+  .verdict-badge.low {
+    background: rgba(52,211,153,0.12);
+    border: 1px solid rgba(52,211,153,0.3);
+    color: var(--success);
+  }
+
+  .result-hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2rem, 5vw, 3rem);
+    line-height: 1.15;
+    margin-bottom: 10px;
+  }
+
+  .result-hero h1.high {
+    background: linear-gradient(135deg, #fca5a5, #f87171, #ef4444);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .result-hero h1.low {
+    background: linear-gradient(135deg, #6ee7b7, #34d399, #10b981);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .result-hero p {
+    color: var(--muted);
+    font-size: 15px;
+  }
+
+  /* Risk Meter */
+  .meter-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px 36px;
+    margin-bottom: 24px;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+
+  .meter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+  }
+
+  .meter-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .meter-pct {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.4rem;
+  }
+
+  .meter-pct.high { color: var(--danger); }
+  .meter-pct.low  { color: var(--success); }
+
+  .meter-track {
+    height: 12px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 100px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+
+  .meter-fill {
+    height: 100%;
+    border-radius: 100px;
+    transition: width 1.2s cubic-bezier(.22,1,.36,1);
+  }
+
+  .meter-fill.high {
+    background: linear-gradient(90deg, #fbbf24, #f97316, #ef4444);
+  }
+
+  .meter-fill.low {
+    background: linear-gradient(90deg, #6ee7b7, #34d399);
+  }
+
+  .meter-ticks {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  /* Risk zones legend */
+  .risk-zones {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .zone {
+    flex: 1;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 10px;
+    font-weight: 600;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .zone.safe { background: rgba(52,211,153,0.08); color: #34d399; border: 1px solid rgba(52,211,153,0.15); }
+  .zone.moderate { background: rgba(251,191,36,0.08); color: #fbbf24; border: 1px solid rgba(251,191,36,0.15); }
+  .zone.risk { background: rgba(248,113,113,0.08); color: #f87171; border: 1px solid rgba(248,113,113,0.15); }
+
+  /* Cards grid */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+
+  .info-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 24px;
+  }
+
+  .info-card h5 {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .info-card h5 .dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* Key factors */
+  .factor-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .factor-name {
+    font-size: 12px;
+    color: var(--label);
+    flex: 0 0 130px;
+  }
+
+  .factor-bar-wrap {
+    flex: 1;
+    height: 6px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 100px;
+    margin: 0 12px;
+    overflow: hidden;
+  }
+
+  .factor-bar {
+    height: 100%;
+    border-radius: 100px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+
+  .factor-val {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    flex: 0 0 32px;
+    text-align: right;
+  }
+
+  /* Action items */
+  .action-list { list-style: none; }
+
+  .action-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--label);
+    line-height: 1.5;
+  }
+
+  .action-list li:last-child { border-bottom: none; }
+
+  .action-list li i {
+    color: var(--danger);
+    font-size: 12px;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .action-list.success-list li i { color: var(--success); }
+
+  /* Positive signals */
+  .signal-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .chip {
+    background: rgba(52,211,153,0.08);
+    border: 1px solid rgba(52,211,153,0.18);
+    color: #34d399;
+    border-radius: 100px;
+    padding: 5px 14px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  /* Back button */
+  .back-wrap {
+    text-align: center;
+    animation: fadeUp 0.6s 0.35s ease both;
+    margin-top: 8px;
+  }
+
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 36px;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #0ea5e9, #6366f1);
+    color: white;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .back-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(14,165,233,0.3);
+    color: white;
+  }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 620px) {
+    .cards-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  {% if prediction == "Yes" %}
+
+  <!-- HIGH RISK -->
+  <div class="result-hero">
+    <div class="verdict-badge high"><i class="fas fa-triangle-exclamation"></i> High Attrition Risk Detected</div>
+    <h1 class="high">⚠ This Employee<br>May Leave</h1>
+    <p>Immediate action recommended to improve retention</p>
+  </div>
+
+  <div class="meter-card">
+    <div class="meter-header">
+      <span class="meter-title">Estimated Attrition Probability</span>
+      <span class="meter-pct high">~82%</span>
+    </div>
+    <div class="meter-track">
+      <div class="meter-fill high" style="width: 82%;"></div>
+    </div>
+    <div class="meter-ticks">
+      <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
+    </div>
+    <div class="risk-zones">
+      <div class="zone safe">0–35%<br>Safe</div>
+      <div class="zone moderate">35–65%<br>Moderate</div>
+      <div class="zone risk" style="border-color:rgba(248,113,113,0.4); background:rgba(248,113,113,0.15);">65–100%<br>High Risk ←</div>
+    </div>
+  </div>
+
+  <div class="cards-grid">
+
+    <!-- Key Risk Drivers -->
+    <div class="info-card">
+      <h5><span class="dot" style="background:var(--danger)"></span> Key Risk Drivers</h5>
+      <div class="factor-row">
+        <span class="factor-name">Overtime</span>
+        <div class="factor-bar-wrap"><div class="factor-bar" style="width:92%; background: linear-gradient(90deg,#fbbf24,#ef4444)"></div></div>
+        <span class="factor-val">High</span>
+      </div>
+      <div class="factor-row">
+        <span class="factor-name">Job Satisfaction</span>
+        <div class="factor-bar-wrap"><div class="factor-bar" style="width:75%; background: linear-gradient(90deg,#fbbf24,#ef4444)"></div></div>
+        <span class="factor-val">Low</span>
+      </div>
+      <div class="factor-row">
+        <span class="factor-name">Work-Life Balance</span>
+        <div class="factor-bar-wrap"><div class="factor-bar" style="width:80%; background: linear-gradient(90deg,#fbbf24,#ef4444)"></div></div>
+        <span class="factor-val">Poor</span>
+      </div>
+      <div class="factor-row">
+        <span class="factor-name">Monthly Income</span>
+        <div class="factor-bar-wrap"><div class="factor-bar" style="width:65%; background: linear-gradient(90deg,#fbbf24,#ef4444)"></div></div>
+        <span class="factor-val">Below avg</span>
+      </div>
+      <div class="factor-row">
+        <span class="factor-name">Distance Home</span>
+        <div class="factor-bar-wrap"><div class="factor-bar" style="width:58%; background: linear-gradient(90deg,#fbbf24,#ef4444)"></div></div>
+        <span class="factor-val">Far</span>
+      </div>
+    </div>
+
+    <!-- Retention Actions -->
+    <div class="info-card">
+      <h5><span class="dot" style="background:#fb923c"></span> Suggested Actions</h5>
+      <ul class="action-list">
+        <li><i class="fas fa-circle-dot"></i> Review and benchmark compensation against market rates</li>
+        <li><i class="fas fa-circle-dot"></i> Reduce mandatory overtime or offer flex hours</li>
+        <li><i class="fas fa-circle-dot"></i> Discuss career growth and promotion timeline</li>
+        <li><i class="fas fa-circle-dot"></i> Offer remote or hybrid work options</li>
+        <li><i class="fas fa-circle-dot"></i> Schedule 1:1 engagement check-in with manager</li>
+        <li><i class="fas fa-circle-dot"></i> Consider stock option or bonus incentive plan</li>
+      </ul>
+    </div>
+  </div>
+
+  {% else %}
+
+  <!-- LOW RISK -->
+  <div class="result-hero">
+    <div class="verdict-badge low"><i class="fas fa-shield-check"></i> Low Attrition Risk</div>
+    <h1 class="low">✅ This Employee<br>Looks Retained</h1>
+    <p>Employee profile indicates strong retention likelihood</p>
+  </div>
+
+  <div class="meter-card">
+    <div class="meter-header">
+      <span class="meter-title">Estimated Attrition Probability</span>
+      <span class="meter-pct low">~18%</span>
+    </div>
+    <div class="meter-track">
+      <div class="meter-fill low" style="width: 18%;"></div>
+    </div>
+    <div class="meter-ticks">
+      <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
+    </div>
+    <div class="risk-zones">
+      <div class="zone safe" style="border-color:rgba(52,211,153,0.4); background:rgba(52,211,153,0.15);">0–35%<br>Safe ←</div>
+      <div class="zone moderate">35–65%<br>Moderate</div>
+      <div class="zone risk">65–100%<br>High Risk</div>
+    </div>
+  </div>
+
+  <div class="cards-grid">
+
+    <!-- Positive signals -->
+    <div class="info-card">
+      <h5><span class="dot" style="background:var(--success)"></span> Positive Signals</h5>
+      <div class="signal-chips">
+        <span class="chip">✓ Good Job Satisfaction</span>
+        <span class="chip">✓ Healthy Work-Life Balance</span>
+        <span class="chip">✓ No Overtime Stress</span>
+        <span class="chip">✓ Competitive Compensation</span>
+        <span class="chip">✓ Recent Promotion</span>
+        <span class="chip">✓ High Job Involvement</span>
+      </div>
+      <div class="factor-row" style="margin-top: 20px;">
+        <span class="factor-name">Retention Score</span>
+        <div class="factor-bar-wrap"><div class="factor-bar" style="width:82%; background: linear-gradient(90deg,#34d399,#6ee7b7)"></div></div>
+        <span class="factor-val" style="color:var(--success)">82%</span>
+      </div>
+      <div class="factor-row">
+        <span class="factor-name">Engagement Level</span>
+        <div class="factor-bar-wrap"><div class="factor-bar" style="width:75%; background: linear-gradient(90deg,#34d399,#6ee7b7)"></div></div>
+        <span class="factor-val" style="color:var(--success)">75%</span>
+      </div>
+    </div>
+
+    <!-- Maintain actions -->
+    <div class="info-card">
+      <h5><span class="dot" style="background:var(--success)"></span> Keep Up The Good Work</h5>
+      <ul class="action-list success-list">
+        <li><i class="fas fa-circle-dot"></i> Maintain regular feedback and recognition</li>
+        <li><i class="fas fa-circle-dot"></i> Continue growth &amp; development programs</li>
+        <li><i class="fas fa-circle-dot"></i> Keep manager-employee relationship strong</li>
+        <li><i class="fas fa-circle-dot"></i> Re-evaluate role in 6 months for growth</li>
+        <li><i class="fas fa-circle-dot"></i> Periodic pulse surveys to catch early signals</li>
+      </ul>
+    </div>
+  </div>
+
+  {% endif %}
+
+  <div class="back-wrap">
+    <a href="/" class="back-btn">
+      <i class="fas fa-arrow-left"></i> Predict Another Employee
+    </a>
+  </div>
+
+</div>
+</body>
+</html>
